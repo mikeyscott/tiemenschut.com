@@ -15,7 +15,9 @@ public class TrainView extends View {
     private Drawable         train;
     private Drawable         trainCars;
 
+    // variable keeping track of scroll/fling offset
     private int              offset     = 0;
+
     private OverScroller     scroller;
     private GestureDetector  gestureDetector;
 
@@ -25,12 +27,15 @@ public class TrainView extends View {
         trainCars = getResources().getDrawable(R.drawable.cars);
 
         scroller = new OverScroller(context);
+
+        // this is our custom implementation of the OnGestureListener interface
         GestureListener gestureListener = new GestureListener(this);
         gestureDetector = new GestureDetector(context, gestureListener);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        // forward all touch events to the GestureDetector
         return gestureDetector.onTouchEvent(event);
     }
 
@@ -38,21 +43,24 @@ public class TrainView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        // computeScrollOffset() returns true if a fling is in progress
         if (scroller.computeScrollOffset()) {
             offset = scroller.getCurrX();
             postInvalidateDelayed(30);
         }
 
+        // this is the actual drawing, first the engine ...
         train.setBounds(offset, 0, train.getIntrinsicWidth() + offset, train.getIntrinsicHeight());
+        train.draw(canvas);
+        // ... then the cars
         for (int i = 0; i < TRAIN_CARS; ++i) {
             int left = -(i + 1) * trainCars.getIntrinsicWidth() + offset;
             trainCars.setBounds(left, 0, left + trainCars.getIntrinsicWidth(), train.getIntrinsicHeight());
             trainCars.draw(canvas);
         }
-
-        train.draw(canvas);
     }
 
+    // called when the GestureListener detects scroll
     public void scroll(int distanceX) {
         scroller.forceFinished(true);
         offset -= distanceX;
@@ -60,6 +68,7 @@ public class TrainView extends View {
         invalidate();
     }
 
+    // called when the GestureListener detects fling
     public void fling(int velocityX) {
         scroller.forceFinished(true);
         scroller.fling(offset, 0, velocityX, 0, 0, getMaxOffset(), 0, 0, 50, 0);
